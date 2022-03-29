@@ -11,15 +11,10 @@ use App\Service\MessageService;
 
 class HookController extends AbstractController
 {
-    #[Route('/hook-endpoint', name: 'hook_endpoint')]
-    // POST
-    public function index(MessageBusInterface $bus, MessageService $messageService): Response
-    {
-
-        /*
-         * Json:
-         *
-         * {
+    /*
+     * This is the webhook recieved from whatapp/facebook
+     * FORMAT:
+     * {
                 "contacts": [
                     {
                         "profile": {
@@ -40,17 +35,45 @@ class HookController extends AbstractController
                     }
                 ]
             }
-         *
-         *
-         *
-         */
+     */
 
-        dd($messageService->sendWhatsAppText("34622814642","Hi there"));
+    #[Route('/hook-endpoint', name: 'hook_endpoint')]
+    // POST
+    public function whatsappHook(MessageBusInterface $bus, MessageService $messageService): Response
+    {
+        //We cannot wait to process it, so we send it for async processing
 
         $bus->dispatch(new WhatsappNotification('Whatsapp me!'));
 
         return $this->json([
             'message' => 'Message sent!',
+        ]);
+    }
+
+
+    /*
+     * This is called form out own server
+     * FORMAT: {number:"34622824642"}
+     *
+     */
+
+    #[Route('/chatwith-endpoint', name: 'chatwith_endpoint')]
+    // POST
+    public function index(WhatsappService $whatsappService): Response
+    {
+
+        dd($whatsappService->getTemplates());
+
+
+        $status = "KO";
+        $message = '';
+
+        $whatsappService->sendWhatsApp('34622814642', [], '', 'es', '');
+
+
+        return $this->json([
+            'status' => $status,
+            'message' => $message
         ]);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Command;
 
-use App\Service\MessageService;
+use App\Service\WhatsappService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -20,7 +20,7 @@ class Make360WebhookCommand extends Command
 
 
     public function __construct(
-        private MessageService $messageService,
+        private WhatsappService $messageService,
 
     ) {
         parent::__construct();
