@@ -7,7 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Service\MessageService;
+use App\Service\WhatsappService;
 
 class HookController extends AbstractController
 {
@@ -62,13 +62,15 @@ class HookController extends AbstractController
     public function index(WhatsappService $whatsappService): Response
     {
 
-        dd($whatsappService->getTemplates());
-
-
         $status = "KO";
         $message = '';
 
-        $whatsappService->sendWhatsApp('34622814642', [], '', 'es', '');
+        $whatsappService->sendWhatsApp(
+            '34622814642', //El numero
+            [], //Placeholders, ej name
+            'wipe_in_hous',
+            'es',
+            'f6baa15e_fb52_4d4f_a5a0_cde307dc3a85');
 
 
         return $this->json([
