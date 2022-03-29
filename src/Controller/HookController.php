@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Message\WhatsappNotification;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
@@ -59,8 +60,13 @@ class HookController extends AbstractController
 
     #[Route('/chatwith-endpoint', name: 'chatwith_endpoint')]
     // POST
-    public function index(WhatsappService $whatsappService): Response
+    public function index(WhatsappService $whatsappService, Request $request): Response
     {
+
+        $content = $request->getContent();
+        $json = json_decode($content);
+
+        $json->number;
 
         $status = "KO";
         $message = '';
