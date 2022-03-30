@@ -25,6 +25,11 @@ class Messages
     #[ORM\Column(type: 'datetime')]
     private $created;
 
+    public function __construct()
+    {
+        $this->created = new \DateTime('now');
+    }
+
     public function getId(): ?int
     {
         return $this->id;

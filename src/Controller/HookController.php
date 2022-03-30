@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Message\WhatsappNotification;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -10,6 +11,8 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Service\WhatsappService;
 use App\Entity\Messages;
+use Doctrine\Persistence\ManagerRegistry;
+
 
 class HookController extends AbstractController
 {
@@ -39,31 +42,24 @@ class HookController extends AbstractController
             }
      */
 
-     
+
+    /*
+     * This is for the webhook that facebook calls
+     */
 
     #[Route('/hook-endpoint', name: 'hook_endpoint')]
     // POST
-    public function whatsappHook(MessageBusInterface $bus, WhatsappService $messageService): Response
+    public function whatsappHook(MessageBusInterface $bus, Request $request,): Response
     {
-
-        $messageManager = $messageService->getManager();
-        $message = new Messages();
-        $message->setWaId('34622814642');
-        $message->setWhatsappMessage("texto");
-        $message->setMessageType("1");
-        //$message->setCreated("1640174341");
-
-        $messageManager->persist($message);
-
-        $messageManager->flush();
-
-
         //We cannot wait to process it, so we send it for async processing
 
-        $bus->dispatch(new WhatsappNotification('Whatsapp me!'));
+        $content = $request->getContent();
+
+        $bus->dispatch(new WhatsappNotification($content));
 
         return $this->json([
-            'message' => 'Message sent!',
+            //Facebook doesnt care about our message only the status code - 200 or 201
+            'message' => 'Message ok!',
         ]);
     }
 
@@ -71,49 +67,86 @@ class HookController extends AbstractController
     /*
      * This is called form out own server
      * FORMAT: {number:"34622824642"}
-     *
      */
 
     #[Route('/chatwith-endpoint', name: 'chatwith_endpoint')]
     // POST
-    public function index(WhatsappService $whatsappService, Request $request): Response
+    public function index(
+        WhatsappService $whatsappService,
+        Request $request,
+        ManagerRegistry $doctrine,
+        LoggerInterface $logger): Response
     {
-        $content = $request->getContent();  
-        $json = json_decode($content); //decode JSON and obtain data 
-       $status = "KO";
-       $message = " ";
-       
-      // if(!is_numeric($json->number)){      //check that it is a number  
-       // $message = 'This is not a number';     //return error message
-       //}else{
-        $status = "OK"; //change status to success
-        
-        $work_schedule = false; //create boolean to check if the message arrives during business hours
-         
+        $content = $request->getContent();
+        $json = json_decode($content); //decode JSON and obtain data
+        $status = "KO";
+        $message = " ";
+        $messageType = "";
+
+        //create boolean to check if the message arrives during business hours
+        $workSchedule = true;
+
         //Conditional to check whether the message arrives during work schedule or not
-        if(!is_numeric($json->number)){    //if it is not a number, return error message 
-            $message='This is not a number';
-        }elseif($work_schedule==true){     //if it is a number and arrives within the schedule return wipe_in_hous template
-           
-            $whatsappService->sendWhatsApp(
-                '34697110110', //Number
-                [], //Placeholders
-                'wipe_in_hous', //template 
-                'es', //language
-                'f6baa15e_fb52_4d4f_a5a0_cde307dc3a85'); 
-        }elseif($work_schedule==false){ //if it is a number and arrives out of hours return template wipe_out_hours
-            $whatsappService->sendWhatsApp(
-                '34697110110', //Number
-                [], //Placeholders
-                'wipe_out_hours', //template
-                'es', //language
-                'f6baa15e_fb52_4d4f_a5a0_cde307dc3a85');
-           
-        }else{ //any other option, return error
+        //if it is not a number, return error message
+        if (!is_numeric($json->number)) {
+            $message = 'This is not a number';
+        }
+        //if it is a number and arrives within the schedule return wipe_in_hous template
+        elseif ($workSchedule == true) {
+
+            try{
+                $whatsappService->sendWhatsApp(
+                    $json->number, //Number
+                    [], //Placeholders
+                    'wipe_in_hous', //template
+                    'es', //language
+                    'f6baa15e_fb52_4d4f_a5a0_cde307dc3a85');
+
+                $status = "OK";
+                $messageType = "IH";
+            }
+            catch(\Exception $exception){
+                $logger->error($exception->getMessage());
+            }
+
+        }
+        //if it is a number and arrives out of hours return template wipe_out_hours
+        elseif ($workSchedule == false) {
+
+            try{
+                $whatsappService->sendWhatsApp(
+                    $json->number, //Number
+                    [], //Placeholders
+                    'wipe_out_hours', //template
+                    'es', //language
+                    'f6baa15e_fb52_4d4f_a5a0_cde307dc3a85');
+                $status = "OK";
+                $messageType = "OH";
+            }
+            catch (\Exception $exception){
+                $logger->error($exception->getMessage());
+            }
+
+        } else {
+            //any other option, return error
             $message = "error";
         }
 
-
+        if($status == "OK"){
+            try {
+                $entityManager = $doctrine->getManager();
+                $messages = new Messages();
+                $messages->setWaId($json->number);
+                $messages->setWhatsappMessage("template");
+                $messages->setMessageType($messageType);
+                $entityManager->persist($messages);
+                $entityManager->flush();
+            }
+            catch (\Exception $exception){
+                dd($exception);
+                $logger->error($exception->getMessage());
+            }
+        }
 
         return $this->json([
             'status' => $status,
