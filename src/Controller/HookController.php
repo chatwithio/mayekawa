@@ -25,15 +25,15 @@ class HookController extends AbstractController
                         "profile": {
                             "name": "Ward"
                         },
-                        "wa_id": "34622814642"
+                        "wa_id": "34697110110"
                     }
                 ],
                 "messages": [
                     {
-                        "from": "34622814642",
+                        "from": "34697110110",
                         "id": "ABGGNGIoFGQvAgo-sAr3kcI5DI30",
                         "text": {
-                            "body": "Test from ward"
+                            "body": "1"
                         },
                         "timestamp": "1640174341",
                         "type": "text"
@@ -66,7 +66,7 @@ class HookController extends AbstractController
 
     /*
      * This is called form out own server
-     * FORMAT: {number:"34622824642"}
+     * FORMAT: {number:"34697110110"}
      */
 
     #[Route('/chatwith-endpoint', name: 'chatwith_endpoint')]
