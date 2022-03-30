@@ -27,7 +27,7 @@ class WhatsappNotificationHandler
 
     public function __invoke(WhatsappNotification $message)
     {
-        //$message = json_decode($message);
+        $message = json_decode($message);
 
         //Get the previous message from the database
         $previousMessage = $this->getPreviousMessage('34622814642');
