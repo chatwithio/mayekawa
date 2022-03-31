@@ -82,6 +82,7 @@ class HookController extends AbstractController
         $status = "KO";
         $message = " ";
         $messageType = "";
+        $textid = 0;
 
         //create boolean to check if the message arrives during business hours
         $workSchedule = true;
@@ -104,6 +105,7 @@ class HookController extends AbstractController
 
                 $status = "OK";
                 $messageType = "IH";
+                $textid = 0;
             }
             catch(\Exception $exception){
                 $logger->error($exception->getMessage());
@@ -122,6 +124,7 @@ class HookController extends AbstractController
                     'f6baa15e_fb52_4d4f_a5a0_cde307dc3a85');
                 $status = "OK";
                 $messageType = "OH";
+                $textid = 1;
             }
             catch (\Exception $exception){
                 $logger->error($exception->getMessage());
@@ -136,8 +139,9 @@ class HookController extends AbstractController
             try {
                 $entityManager = $doctrine->getManager();
                 $messages = new Messages();
+                $messages->setId($textid);
                 $messages->setWaId($json->number);
-                $messages->setWhatsappMessage("template");
+                $messages->setWhatsappMessage($message); // "template"
                 $messages->setMessageType($messageType);
                 $entityManager->persist($messages);
                 $entityManager->flush();
