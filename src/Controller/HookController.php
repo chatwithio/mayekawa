@@ -66,7 +66,11 @@ class HookController extends AbstractController
 
     /*
      * This is called form out own server
-     * FORMAT: {number:"34697110110"}
+     * FORMAT: 
+     *  
+     * {
+            "number":"34697110110"
+        }
      */
 
     #[Route('/chatwith-endpoint', name: 'chatwith_endpoint')]
@@ -89,6 +93,9 @@ class HookController extends AbstractController
 
         //Conditional to check whether the message arrives during work schedule or not
         //if it is not a number, return error message
+        
+        
+
         if (!is_numeric($json->number)) {
             $message = 'This is not a number';
         }
@@ -106,6 +113,7 @@ class HookController extends AbstractController
                 $status = "OK";
                 $messageType = "IH";
                 $textid = 0;
+              
             }
             catch(\Exception $exception){
                 $logger->error($exception->getMessage());

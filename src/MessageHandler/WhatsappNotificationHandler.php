@@ -37,7 +37,8 @@ class WhatsappNotificationHandler
 
     public function __invoke(WhatsappNotification $message)
     {
-        $message = json_decode($message);
+        $content = $message->getContent();
+        $message = json_decode($content);
         $textToBeSent = " ";
         $textID= 0; 
 
@@ -52,7 +53,7 @@ class WhatsappNotificationHandler
             $this->sendMessage($textToBeSent, $message);
 
             //save the data to the database
-            $this->saveData($message);
+            $this->saveData($message, $textID);
         }
 
         //Think about how to deal with an error like this....
