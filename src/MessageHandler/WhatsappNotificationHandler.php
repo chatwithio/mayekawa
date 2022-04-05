@@ -5,13 +5,14 @@ namespace App\MessageHandler;
 
 use App\Entity\Messages;
 use App\Message\WhatsappNotification;
+use App\Repository\MessagesRepository;
 use App\Service\BotService;
 use App\Service\WhatsappService;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Doctrine\ORM\EntityManagerInterface;
-
+use GuzzleHttp\Psr7\Message;
 
 #[AsMessageHandler]
 class WhatsappNotificationHandler
@@ -40,7 +41,7 @@ class WhatsappNotificationHandler
         $content = $message->getContent();
         $message = json_decode($content);
         $textToBeSent = " ";
-        $textID= 0; 
+        $textType= "";
 
         //Get the previous message from the database
         $previousMessage = $this->getPreviousMessage('34697110110');
@@ -53,7 +54,7 @@ class WhatsappNotificationHandler
             $this->sendMessage($textToBeSent, $message);
 
             //save the data to the database
-            $this->saveData($message, $textID);
+            $this->saveData($message, $textType);
         }
 
         //Think about how to deal with an error like this....
@@ -71,10 +72,13 @@ class WhatsappNotificationHandler
 
     private function gettextToBeSent($previousMessage, $message){
     
-        $prevtextID = $previousMessage->getID();
-        $textMessage = $message -> getWhatsappMessage();
+        $prevtextType = $previousMessage->getMessageType();
+        $msg_messages = $message ->{'messages'};
+        $textMessage = $msg_messages[0]->text->body;
+        $textToBeSent = " ";
+        
 
-        if($prevtextID== 0){  //get text of the next message depending on the previous message 
+        if($prevtextType== 'IH'){  //get text of the next message depending on the previous message 
             if($textMessage==1 || $textMessage==2 || $textMessage==4 || $textMessage==5){
 
                 $textToBeSent = "Bot MYCOM: ¡Bien! Ahora indica la
@@ -89,15 +93,15 @@ class WhatsappNotificationHandler
                 7. Villahermosa
                 8. Mérida ";
 
-                $textID = "2"; 
-
+                $textType = "IA0"; 
+                
             }else if($textMessage==3){
 
                 $textToBeSent = "Bot MYCOM: ¡Gracias! Te estamos
                 transfiriendo con el ejecutivo MYCOM
                 que le dará seguimiento a tu petición. ";
 
-                $textID = "3";
+                $textType = "IB0"; 
 
             }else if($textMessage==6 || $textMessage==7){
 
@@ -105,7 +109,7 @@ class WhatsappNotificationHandler
                 transfiriendo con el ejecutivo MYCOM
                 que le dará seguimiento a tu petición.";
 
-                $textID = "4";
+                $textType = "IC0"; 
     
             }else if($textMessage==8) {
     
@@ -116,11 +120,11 @@ class WhatsappNotificationHandler
                 3. Thermojack (Tunel de congelación)
                 4. Nantsune (Rebanadoras de carne)";
 
-                $textID = "5";
+                $textType = "ID0"; 
 
             }
     
-        }else if($prevtextID== 1) {
+        }else if($prevtextType== 'OH') {
 
             $textToBeSent = "¡Hola, gracias por
             escribir! Por el momento no nos
@@ -133,78 +137,78 @@ class WhatsappNotificationHandler
             Nombre
             Correo
             Teléfono";
-            $textID = "18";
+            $textType = "OA0"; 
 
             
 
-        }else if($prevtextID = "2"){
+        }else if($prevtextType == "IA0"){
 
             if($textMessage==1){
                 $textToBeSent = "¡Gracias! te estamos transfiriendo con el ejecutivo MYCOM que le dará seguimiento a su petición.
                 1. Reina Bustamante.";  // I put the text instead of the link to the executive until I know how to do it.
-                $textID = "6";
+                $textType = "IA1";
             }else if($textMessage==2){
                 $textToBeSent = "¡Gracias! te estamos transfiriendo con el ejecutivo MYCOM que le dará seguimiento a su petición.
                 2. César González.";
-                $textID = "7";
+                $textType = "IA2";
             }else  if($textMessage==3){
                 $textToBeSent = "¡Gracias! te estamos transfiriendo con el ejecutivo MYCOM que le dará seguimiento a su petición.
                 3. Héctor Rubio.";
-                $textID = "8";
+                $textType = "IA3";
             }else  if($textMessage==4){
                 $textToBeSent = "¡Gracias! te estamos transfiriendo con el ejecutivo MYCOM que le dará seguimiento a su petición.
                 4. Patricia Ramírez.";
-                $textID = "9";
+                $textType = "IA4";
             }else  if($textMessage==5){
                 $textToBeSent = "¡Gracias! te estamos transfiriendo con el ejecutivo MYCOM que le dará seguimiento a su petición.
                 5. Edgar Martínez.";
-                $textID = "10";
+                $textType = "IA5";
             }else  if($textMessage==6){
                 $textToBeSent = "¡Gracias! te estamos transfiriendo con el ejecutivo MYCOM que le dará seguimiento a su petición.
                 6. Nolberto Flores";
-                $textID = "11";
+                $textType = "IA6";
             }else  if($textMessage==7){
                 $textToBeSent = "¡Gracias! te estamos transfiriendo con el ejecutivo MYCOM que le dará seguimiento a su petición.
                 7. Isaac Rodríguez.";
-                $textID = "12";
+                $textType = "IA7";
             }else  if($textMessage==8){
                 $textToBeSent = "¡Gracias! te estamos transfiriendo con el ejecutivo MYCOM que le dará seguimiento a su petición.
                 8. Raúl Solís.";
-                $textID = "13";
+                $textType = "IA8";
             }           
 
-        }else if($prevtextID = "3"){
+        }else if($prevtextType == "IB0"){
 
             $textToBeSent = "Atención
             3. Oscar Cabrera.";
-            $textID = "14";
+            $textType = "IB1";
 
-        }else if($prevtextID = "4"){
+        }else if($prevtextType == "IC0"){
 
             $textToBeSent = "Atención
             6 y 7: En revisión.";
 
-            $textID = "15";
+            $textType = "IC1";
 
-        }else if($prevtextID = "5"){
+        }else if($prevtextType == "ID0"){
 
             if($textMessage==1 || $textMessage==2 || $textMessage==3){
                 $textToBeSent = "¡Gracias! te estamos transfiriendo con el ejecutivo MYCOM que le dará seguimiento a su petición.
                 1,2 y 3: Ferando Vera.";
-                $textID = "16";
+                $textType = "ID1";
             }else  if($textMessage==4){
                 $textToBeSent = "¡Gracias! te estamos transfiriendo con el ejecutivo MYCOM que le dará seguimiento a su petición.
                 4. Julián Valenzuela.";
-                $textID = "17";
+                $textType = "ID2";
             }           
 
-        }else if($prevtextID = "18"){
+        }else if($prevtextType== "OA0"){
 
             $textToBeSent = "Bot MYCOM: ¡Muchas gracias! El
             equipo MYCOM se comunicará en
             breve. ";
 
-            $textID = "19";
+            $textType = "OA1";
 
         }
        
@@ -214,9 +218,9 @@ class WhatsappNotificationHandler
     
 
     private function sendMessage($textToBeSent,$message){  //send message with text depending on previous message
-       
+        $msg = $message->{'contacts'};
             $this->whatsappService->sendWhatsAppText(
-                $message->number,
+                $msg[0]->wa_id,
                 'text',
                 $textToBeSent);
 
@@ -225,13 +229,13 @@ class WhatsappNotificationHandler
         }
     
 
-    private function saveData($message, $textID){ //save data of the sent message
-
+    private function saveData($message, $textType){ //save data of the sent message
+            $msg_contacts = $message -> {'contacts'};
+            $msg_messages = $message ->{'messages'};
             $messages = new Messages();
-            $messages->setID($textID);
-            $messages->setWaId($message->number);
-            $messages->setWhatsappMessage($message->whatsappMessage);
-            $messages->setMessageType($message->messageType);
+            $messages->setWaId($msg_contacts[0]->wa_id);
+            $messages->setWhatsappMessage($msg_messages[0]->text->body);
+            $messages->setMessageType($textType);
             $this->em->persist($messages);
             $this->em->flush();
 

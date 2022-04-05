@@ -86,7 +86,6 @@ class HookController extends AbstractController
         $status = "KO";
         $message = " ";
         $messageType = "";
-        $textid = 0;
 
         //create boolean to check if the message arrives during business hours
         $workSchedule = true;
@@ -147,7 +146,6 @@ class HookController extends AbstractController
             try {
                 $entityManager = $doctrine->getManager();
                 $messages = new Messages();
-                $messages->setId($textid);
                 $messages->setWaId($json->number);
                 $messages->setWhatsappMessage($message); // "template"
                 $messages->setMessageType($messageType);
