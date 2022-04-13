@@ -19,7 +19,7 @@ class Messages
     #[ORM\Column(type: 'text')]
     private $whatsappMessage;
 
-    #[ORM\Column(type: 'string', length: 2)]
+    #[ORM\Column(type: 'string', length: 4)]
     private $messageType;
 
     #[ORM\Column(type: 'datetime')]

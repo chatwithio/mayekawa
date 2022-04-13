@@ -9,9 +9,9 @@ class Kernel extends BaseKernel
 {
     use MicroKernelTrait;
 
-    public function boot(): void
+    public function init(): void
     {
         date_default_timezone_set($this->getContainer()->getParameter('timezone'));
-        parent::boot();
+        parent::init();
     }
 }
